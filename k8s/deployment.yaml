@@ -68,5 +68,4 @@ spec:
                 - ALL
       volumes:
         - name: app-data
-          persistentVolumeClaim:
-            claimName: robo-shop-workbench-data
+          emptyDir: {}

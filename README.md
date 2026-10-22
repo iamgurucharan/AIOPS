@@ -141,19 +141,18 @@ After editing the placeholders, create the deployment resources, all in `guru`:
 
 ```bash
 kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/pvc.yaml
 kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
-These files declare only namespaced ConfigMap, PVC, Service, Deployment, and Ingress objects. No ClusterRole, cluster-wide binding, or access to Robot Shop's namespace is created.
+These files declare only namespaced ConfigMap, Service, Deployment, and Ingress objects. No PVC, ClusterRole, cluster-wide binding, or access to Robot Shop's namespace is created. Incident records use Pod-local ephemeral storage and are lost when the Pod is recreated.
 
 ### 7. Wait for rollout and connect DNS
 
 ```bash
 kubectl -n guru rollout status deployment/robo-shop-workbench --timeout=180s
-kubectl -n guru get pods,svc,ingress,pvc
+kubectl -n guru get pods,svc,ingress
 kubectl -n guru describe ingress robo-shop-workbench
 ```
 
@@ -176,7 +175,7 @@ kubectl apply -f k8s/deployment.yaml
 kubectl -n guru rollout status deployment/robo-shop-workbench
 ```
 
-Check logs with `kubectl -n guru logs deployment/robo-shop-workbench`. Incident state lives on the `robo-shop-workbench-data` PVC. It uses a single replica and `Recreate` rollout because this JSON-file store is not a multi-writer database. Back up that PVC before cluster/storage changes. For production/high availability, migrate records to a transactional database and add authenticated per-user approval/audit identity; the current Basic Auth gate is a shared responder login, not a full identity system.
+Check logs with `kubectl -n guru logs deployment/robo-shop-workbench`. Incident state lives in an `emptyDir` volume and is lost if the Pod is rescheduled or recreated. The deployment uses one replica and a `Recreate` rollout. For production/high availability or retained incident history, use a managed database rather than adding a PVC, and add authenticated per-user approval/audit identity; the current Basic Auth gate is a shared responder login, not a full identity system.
 
 The dashboard probes Robot Shop on each new incident and records the HTTP result as evidence. It cannot infer pod-level failures from an HTTP probe alone; deeper telemetry would require a separately approved read-only monitoring integration. ServiceNow incident creation happens on submit; Problem and KB creation remain approval-gated, and KB records are submitted as drafts.
 
