@@ -1,0 +1,13 @@
+.git
+.gitignore
+.github
+.venv
+__pycache__
+*.py[cod]
+config.env
+config.env.example
+data/state.json
+data/state.tmp
+tests
+k8s
+README.md

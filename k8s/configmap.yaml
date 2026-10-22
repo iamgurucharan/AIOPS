@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: robo-shop-workbench-config
+  namespace: guru
+  labels:
+    app.kubernetes.io/name: robo-shop-workbench
+data:
+  APP_HOST: "0.0.0.0"
+  APP_PORT: "8080"
+  APP_NAMESPACE: "guru"
+  APP_AUTH_ENABLED: "true"
+  STATE_FILE: "/data/state.json"
+  LLM_API_URL: "https://api.openai.com/v1/chat/completions"
+  LLM_MODEL: "gpt-4o-mini"
+  ROBOT_SHOP_URL: "http://a29edbfdcb68f43a393309b9987fb200-1520260698.ap-southeast-2.elb.amazonaws.com"

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f4f0">
+  <title>ROBO-SHOP | Incident Workbench</title>
+  <link rel="stylesheet" href="/styles.css?v=2">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="ROBO-SHOP Incident Workbench home">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span class="brand-copy"><strong>ROBO-SHOP</strong><small>INCIDENT PLATFORM</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <button class="workspace-switch"><span class="workspace-dot"></span> Production ops <span class="chevron">⌄</span></button>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a class="nav-item active" href="#overview"><span class="nav-icon">◫</span> Overview <span class="nav-count">02</span></a>
+        <a class="nav-item" href="#incidents"><span class="nav-icon">◉</span> Incidents</a>
+        <a class="nav-item" href="#reviews"><span class="nav-icon">▤</span> Review queue <span class="review-dot"></span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="service-label">CONNECTED SERVICE</div>
+        <div class="service-row"><span class="service-icon">R</span><span><strong>Robot Shop</strong><small>robot-shop · EKS</small></span><span class="live-dot" title="Application adapter"></span></div>
+        <div class="sidebar-rule"></div>
+        <button class="user-profile"><span class="avatar">G</span><span><strong>Guru</strong><small>Incident responder</small></span><span class="more">···</span></button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Operations</span><span class="crumb-slash">/</span><strong>Incident desk</strong></div>
+        <div class="top-actions"><span class="connection-state" id="connection-state"><span class="state-dot"></span><span>Checking integrations</span></span><button class="icon-button" id="refresh-button" title="Refresh dashboard" aria-label="Refresh dashboard">↻</button><span class="avatar top-avatar">G</span></div>
+      </header>
+
+      <section class="page-heading" id="overview">
+        <div><p class="eyebrow"><span id="dashboard-date-label">THURSDAY, OCTOBER 22</span> <span class="eyebrow-separator">/</span> AUSTRALIA-SOUTHEAST</p><h1>Incident desk<span class="heading-period">.</span></h1><p class="heading-subtitle">A clear view of service health, response, and what needs your review.</p></div>
+        <div class="heading-actions">
+          <div class="robot-art" role="img" aria-label="Friendly Robot Shop service robot illustration">
+            <span class="robot-signal signal-one"></span><span class="robot-signal signal-two"></span>
+            <span class="robot-antenna"></span><span class="robot-head"><i class="robot-ear left"></i><i class="robot-eye left"></i><i class="robot-eye right"></i><i class="robot-cheek"></i><i class="robot-mouth"></i><i class="robot-ear right"></i></span>
+            <span class="robot-neck"></span><span class="robot-body"><i class="robot-panel"></i><i class="robot-light"></i><i class="robot-arm left"></i><i class="robot-arm right"></i></span>
+            <span class="robot-caption">ROBO-SHOP <i></i> ONLINE</span>
+          </div>
+          <button class="primary-button" id="new-incident-button"><span class="plus">＋</span> Create incident</button>
+        </div>
+      </section>
+
+      <section class="metric-strip" aria-label="Incident summary">
+        <div class="metric"><span class="metric-label">OPEN INCIDENTS</span><div><strong id="metric-open">--</strong><span class="metric-note neutral-note">active</span></div></div>
+        <div class="metric"><span class="metric-label">PRIORITY 1–2</span><div><strong id="metric-critical">--</strong><span class="metric-note urgent-note"><span class="tiny-triangle">▲</span> needs attention</span></div></div>
+        <div class="metric"><span class="metric-label">AWAITING REVIEW</span><div><strong id="metric-review">--</strong><span class="metric-note review-note">RCA + knowledge</span></div></div>
+        <div class="metric metric-service"><span class="metric-label">APPLICATION</span><div><strong class="service-metric-name"><span class="service-icon small-service-icon">R</span> Robot Shop</strong><span class="metric-note service-note"><span class="live-dot"></span> robot-shop namespace</span></div></div>
+      </section>
+
+      <section class="work-area" id="incidents">
+        <div class="incident-panel">
+          <div class="section-heading"><div><p class="section-kicker">RESPONSE</p><h2>Recent incidents</h2></div><div class="list-controls"><label class="search-field"><span>⌕</span><input id="incident-search" type="search" placeholder="Find incident" aria-label="Find incident"></label><select id="status-filter" aria-label="Filter incidents"><option value="all">All incidents</option><option value="open">Open only</option><option value="review">Needs review</option></select></div></div>
+          <div class="table-wrap"><table><thead><tr><th>INCIDENT</th><th>PRIORITY</th><th>APPLICATION</th><th>STATUS</th><th>AGE</th></tr></thead><tbody id="incident-rows"></tbody></table><div class="empty-state hidden" id="empty-state"><span class="empty-symbol">◉</span><strong>No matching incidents</strong><span>Try another search or create an incident.</span></div></div>
+          <div class="table-footer"><span id="results-count">Loading incidents</span><span class="demo-label hidden" id="demo-label">DEMO MODE</span></div>
+        </div>
+
+        <aside class="review-panel" id="reviews">
+          <div class="review-heading"><div><p class="section-kicker">HUMAN IN THE LOOP</p><h2>Review queue</h2></div><span class="review-total" id="review-total">0</span></div>
+          <p class="review-intro">AI drafts stay here until a responder approves them. Approval creates the record in ServiceNow.</p>
+          <div class="review-list" id="review-list"></div>
+          <div class="review-footnote"><span class="lock-mark">⌑</span><span>Nothing is published or sent to Problem Management without your approval.</span></div>
+        </aside>
+      </section>
+
+      <footer class="page-footer"><span>ROBO-SHOP incident platform</span><span>Robot Shop endpoint check <i></i> Approval-gated records</span></footer>
+    </main>
+  </div>
+
+  <dialog class="incident-dialog" id="incident-dialog">
+    <form id="incident-form" class="incident-form">
+      <div class="dialog-header"><div><p class="section-kicker">NEW RECORD · ROBOT SHOP</p><h2>Report an incident</h2></div><button type="button" class="icon-button close-button" id="close-dialog" aria-label="Close">×</button></div>
+      <p class="dialog-copy">The agent will collect available read-only cluster evidence, draft response material, and submit the incident to ServiceNow.</p>
+      <label class="form-label" for="summary">Short description <span>*</span></label>
+      <input class="text-input" id="summary" name="short_description" maxlength="160" placeholder="What is happening?" required>
+      <div class="form-grid">
+        <div><label class="form-label" for="category">Category <span>*</span></label><select class="text-input" id="category" name="category" required></select></div>
+        <div><label class="form-label" for="impact">Impact <span>*</span></label><select class="text-input" id="impact" name="impact" required></select></div>
+        <div><label class="form-label" for="urgency">Urgency <span>*</span></label><select class="text-input" id="urgency" name="urgency" required></select></div>
+        <div class="priority-preview"><span class="form-label">CALCULATED PRIORITY</span><strong id="priority-preview">P3</strong><small id="priority-explanation">Medium impact · Medium urgency</small></div>
+      </div>
+      <label class="form-label" for="details">Description and user impact <span>*</span></label>
+      <textarea class="text-input details-input" id="details" name="details" maxlength="4000" rows="5" placeholder="Describe symptoms, affected users, when it started, and what has changed." required></textarea>
+      <div class="form-error hidden" id="form-error" role="alert"></div>
+      <div class="dialog-actions"><span class="form-assurance"><span>⌁</span> RCA and KB require separate approval</span><button type="submit" class="primary-button" id="submit-incident"><span class="plus">↗</span> Create incident</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="detail-dialog" id="detail-dialog"><div id="detail-content"></div></dialog>
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+</body>
+</html>

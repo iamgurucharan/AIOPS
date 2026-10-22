@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: robo-shop-workbench
+  namespace: guru
+  labels:
+    app.kubernetes.io/name: robo-shop-workbench
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: robo-shop-workbench
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
