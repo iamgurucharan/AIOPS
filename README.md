@@ -112,10 +112,13 @@ APP_PASSWORD=replace-with-a-long-unique-random-password
 SN_INSTANCE_URL=https://your-instance.service-now.com
 SN_USERNAME=your-restricted-integration-user
 SN_PASSWORD=your-ServiceNow-password
+# Alternatively, use a ServiceNow OAuth client-credentials app instead of username/password.
+SN_CLIENT_ID=
+SN_CLIENT_SECRET=
 LLM_API_KEY=your-LLM-provider-key
 ```
 
-`SN_*` and `LLM_API_KEY` may be omitted if you want the app in demo/fallback mode. For live ServiceNow records, the restricted integration account needs create rights for Incident (`incident`), Problem (`problem`), and Knowledge (`kb_knowledge`) tables/fields used by the app. The LLM endpoint/model are configured in `k8s/configmap.yaml`. Review your organization's data policy before sending incident descriptions or endpoint evidence to an external LLM.
+`SN_*` and `LLM_API_KEY` may be omitted if you want the app in demo/fallback mode. ServiceNow accepts either Basic Auth (`SN_USERNAME` + `SN_PASSWORD`) or OAuth client credentials (`SN_CLIENT_ID` + `SN_CLIENT_SECRET`). OAuth requests use `${SN_INSTANCE_URL}/oauth_token.do` unless `SN_OAUTH_TOKEN_URL` is set. The ServiceNow integration account needs create rights for Incident (`incident`), Problem (`problem`), and Knowledge (`kb_knowledge`) tables/fields used by the app. A 401 means authentication was rejected or disabled; verify the secret values and REST authentication policy, or configure OAuth. A 403 means table/field permissions are missing. The LLM endpoint/model are configured in `k8s/configmap.yaml`. Review your organization's data policy before sending incident descriptions or endpoint evidence to an external LLM.
 
 Create/update the Secret only in `guru`:
 

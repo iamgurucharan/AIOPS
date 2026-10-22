@@ -135,6 +135,26 @@ class IncidentWorkflowTests(unittest.TestCase):
         self.assertIn("HTTP 200", evidence[0])
         self.assertEqual(urlopen_mock.call_args.args[0].method, "HEAD")
 
+    def test_servicenow_oauth_uses_bearer_token_for_table_api(self):
+        token_response = unittest.mock.MagicMock()
+        token_response.__enter__.return_value.read.return_value = b'{"access_token":"test-access-token"}'
+        incident_response = unittest.mock.MagicMock()
+        incident_response.__enter__.return_value.read.return_value = b'{"result":{"number":"INC2001","sys_id":"test-sys-id"}}'
+        with patch.dict(os.environ, {
+            "SN_INSTANCE_URL": "https://example.service-now.com",
+            "SN_USERNAME": "",
+            "SN_PASSWORD": "",
+            "SN_CLIENT_ID": "test-client-id",
+            "SN_CLIENT_SECRET": "test-client-secret",
+            "SN_OAUTH_TOKEN_URL": "",
+        }, clear=False):
+            with patch.object(server, "urlopen", side_effect=[token_response, incident_response]) as urlopen_mock:
+                result = server.servicenow_request("incident", {"short_description": "Test"})
+
+        self.assertEqual(result["number"], "INC2001")
+        self.assertEqual(urlopen_mock.call_count, 2)
+        self.assertEqual(urlopen_mock.call_args_list[1].args[0].get_header("Authorization"), "Bearer test-access-token")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
 
@@ -65,7 +65,13 @@ def write_records(records):
 
 def integrations_status():
     return {
-        "servicenow": bool(os.getenv("SN_INSTANCE_URL") and os.getenv("SN_USERNAME") and os.getenv("SN_PASSWORD")),
+        "servicenow": bool(
+            os.getenv("SN_INSTANCE_URL")
+            and (
+                (os.getenv("SN_CLIENT_ID") and os.getenv("SN_CLIENT_SECRET"))
+                or (os.getenv("SN_USERNAME") and os.getenv("SN_PASSWORD"))
+            )
+        ),
         "llm": bool(os.getenv("LLM_API_KEY")),
         "application": bool(os.getenv("ROBOT_SHOP_URL")),
         "namespace": APP_NAMESPACE,
@@ -203,13 +209,44 @@ def servicenow_request(table, record):
     instance = os.getenv("SN_INSTANCE_URL", "").rstrip("/")
     username = os.getenv("SN_USERNAME", "")
     password = os.getenv("SN_PASSWORD", "")
-    if not (instance and username and password):
+    client_id = os.getenv("SN_CLIENT_ID", "")
+    client_secret = os.getenv("SN_CLIENT_SECRET", "")
+    if not instance:
         return None
-    credentials = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    if client_id and client_secret:
+        token_url = os.getenv("SN_OAUTH_TOKEN_URL") or f"{instance}/oauth_token.do"
+        token_request = Request(
+            token_url,
+            data=urlencode({
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+            }).encode("ascii"),
+            headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlopen(token_request, timeout=20) as response:
+                token_response = json.loads(response.read().decode("utf-8"))
+            access_token = token_response.get("access_token", "")
+            if not access_token:
+                raise RuntimeError("ServiceNow OAuth token response did not include an access_token.")
+        except HTTPError as error:
+            raise RuntimeError(
+                f"ServiceNow OAuth token request failed ({error.code}). Check the OAuth client, secret, grant type, and token endpoint."
+            ) from error
+        except (URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+            raise RuntimeError(f"ServiceNow OAuth token request failed: {error}") from error
+        authorization = f"Bearer {access_token}"
+    elif username and password:
+        credentials = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        authorization = f"Basic {credentials}"
+    else:
+        return None
     request = Request(
         f"{instance}/api/now/table/{table}?sysparm_display_value=true",
         data=json.dumps(record).encode("utf-8"),
-        headers={"Authorization": f"Basic {credentials}", "Accept": "application/json", "Content-Type": "application/json"},
+        headers={"Authorization": authorization, "Accept": "application/json", "Content-Type": "application/json"},
         method="POST",
     )
     try:
@@ -217,6 +254,10 @@ def servicenow_request(table, record):
             return json.loads(response.read().decode("utf-8")).get("result", {})
     except HTTPError as error:
         detail = error.read().decode("utf-8", errors="replace")[:500]
+        if error.code == 401:
+            detail += " Verify the Kubernetes Secret credentials; if using Basic Auth, confirm ServiceNow permits REST Basic Auth. OAuth client credentials are also supported."
+        elif error.code == 403:
+            detail += " The ServiceNow account lacks permission to create this table record or one of its fields."
         raise RuntimeError(f"ServiceNow rejected the {table} request ({error.code}): {detail}") from error
     except (URLError, TimeoutError, OSError) as error:
         raise RuntimeError(f"ServiceNow connection failed for {table}: {error}") from error
